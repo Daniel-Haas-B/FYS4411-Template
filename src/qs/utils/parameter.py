@@ -16,6 +16,19 @@ ParameterDataType = Union[np.ndarray, jnp.ndarray]
 
 
 class Parameter:
+    """
+    IMPORTANT: 
+        you may or may not use this depending on how you implement your code and especially your jax gradient implementation.
+        This class is used to store the variational parameters of the wave function in a dictionary-like structure.
+        
+        The main reason for this class is to be able to use the jax.tree_util.register_pytree_node function.
+        
+        That makes it possible to use the jax grad function on the wave function by flattening the tree structure of the parameters.
+        However, there might be other simpler ways to do this.
+
+        This is especially useful if you will deal with multiple layers of parameters, for example, in a general neural network, but it might be overkill for a simple variational wave function or even the RBM.
+    """
+
     def __init__(self, data: Dict[str, ParameterDataType] = None) -> None:
         self.data = data if data is not None else {}
 

@@ -1,123 +1,55 @@
 import sys
 
-sys.path.append("/Users/haas/Documents/Masters/TACompPhys/FYS4411-Template/src/")
+sys.path.append("/Users/haas/Documents/Masters/TACompPhys/FYS4411-Template/src/") # append yout path to the src folder
 import jax
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
+
 
 from qs import quantum_state
+import config
 
 
 jax.config.update("jax_enable_x64", True)
 jax.config.update("jax_platform_name", "cpu")
 
-# Config
-output_filename = "../data/vmc_playground.csv"
-nparticles = 2
-dim = 2
-nsamples = int(2**18)  # 2**18 = 262144
-nchains = 4
-eta = 0.01
 
-training_cycles = 50_000  # this is cycles for the ansatz
-mcmc_alg = "m"
-backend = "jax"
-optimizer = "gd"
-batch_size = 200
-detailed = True
-wf_type = "vmc"
-seed = 142
 
-dfs_mean = []
-df = []
-df_all = []
-
+# set up the system with its backend and level of logging, seed, and other general properties depending on how you want to run it
 system = quantum_state.QS(
-    qs_repr="psi",
-    backend=backend,
+    backend=config.backend,
     log=True,
     logger_level="INFO",
-    seed=seed,
+    seed=config.seed,
 )
 
+# set up the wave function with some of its properties 
 system.set_wf(
-    wf_type,
-    nparticles,
-    dim,
-    sigma2=1.0,
+    config.wf_type,
+    config.nparticles,
+    config.dim,
 )
 
-system.set_sampler(mcmc_alg=mcmc_alg, scale=1.0)
+# choose the sampler algorithm and scale
+system.set_sampler(mcmc_alg=config.mcmc_alg, scale=1.0)
+
+# choose the hamiltonian
 system.set_hamiltonian(type_="ho", int_type="Coulomb", omega=1.0)
+
+# choose the optimizer, learning rate, and other properties depending on the optimizer
 system.set_optimizer(
-    optimizer=optimizer,
-    eta=eta,
+    optimizer=config.optimizer,
+    eta=config.eta,
 )
 
-history = system.train(
-    max_iter=training_cycles,
-    batch_size=batch_size,
-    seed=seed,
-    history=True,
+# train the system, meaning we find the optimal variational parameters for the wave function
+system.train(
+    max_iter=config.training_cycles,
+    batch_size=config.batch_size,
+    seed=config.seed,
 )
 
-df = system.sample(nsamples, nchains=nchains, seed=seed)
-df_all.append(df)
+# now we get the results or do whatever we want with them
+results = system.sample(config.nsamples, nchains=config.nchains, seed=config.seed)
 
-sem_factor = 1 / np.sqrt(len(df))  # sem = standard error of the mean
-mean_data = df[["energy", "std_error", "variance", "accept_rate"]].mean().to_dict()
-mean_data["sem_energy"] = df["energy"].std() * sem_factor
-mean_data["sem_std_error"] = df["std_error"].std() * sem_factor
-mean_data["sem_variance"] = df["variance"].std() * sem_factor
-mean_data["sem_accept_rate"] = df["accept_rate"].std() * sem_factor
-info_data = (
-    df[
-        [
-            "nparticles",
-            "dim",
-            "eta",
-            "scale",
-            "mcmc_alg",
-            "qs_type",
-            "nsamples",
-            "training_cycles",
-            "training_batch",
-        ]
-    ]
-    .iloc[0]
-    .to_dict()
-)
+# display the results
+print(results)
 
-data = {**mean_data, **info_data}  # ** unpacks the dictionary
-df_mean = pd.DataFrame([data])
-dfs_mean.append(df_mean)
-
-epochs = np.arange(training_cycles)[::batch_size]
-plt.plot(epochs, history["energy"], label="energy")
-plt.legend()
-plt.show()
-plt.plot(epochs, history["grads"], label="gradient_norm")
-plt.legend()
-plt.show()
-
-
-df_final = pd.concat(dfs_mean)
-
-# Save results
-df_final.to_csv(output_filename, index=False)
-
-# plot energy convergence curve
-df_all = pd.concat(df_all)
-print(df_all)
-
-if nchains > 1:
-    sns.lineplot(data=df_all, x="chain_id", y="energy")
-else:
-    sns.scatterplot(data=df_all, x="chain_id", y="energy")
-
-
-plt.xlabel("Chain")
-plt.ylabel("Energy")
-plt.show()
