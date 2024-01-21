@@ -1,6 +1,6 @@
 # Template for students undertaking Computational Physics II 
 
-This is a Python template for the v2024 edition of the course FYS4411. The course page can be found [here](https://www.uio.no/studier/emner/matnat/fys/FYS4411/v24/index.html)
+This is a Python template for the v2024 edition of the course FYS4411. The course page can be found [here](https://www.uio.no/studier/emner/matnat/fys/FYS4411/v24/index.html).
 
 ### General information
 
@@ -16,8 +16,8 @@ Using this template, you are supposed to fill some gaps in the code. Another pos
 Here you can find suggestions that can seem rigid in the code structure. Feel free to not follow those.
 
 For example, the way we use just-in-time compilation and some function closures is just a suggestion to ensure the purity of some functions, but there might be other ways. 
-Take a look at https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html
-Another example: maybe you do not want to have to pass the wavefunction object to the Hamiltonian class. Feel free to change those types of things if you don't like the global structure.
+Take a look at [this other material](https://jax.readthedocs.io/en/latest/notebooks/Common_Gotchas_in_JAX.html).
+Another example where you might want to change things: maybe you do not want to have to pass the wavefunction object to the Hamiltonian class. Feel free to change those details if you don't like the global structure.
 
 
 ### Requirements
